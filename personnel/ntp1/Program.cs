@@ -24,7 +24,13 @@ namespace ntp1
 
             DateTime ntpTime = NtpPacket.ToDateTime(timeMessage);
 
-            Console.WriteLine($"Heure actuelle : {ntpTime}");
+            // 1
+            Console.WriteLine($"- {ntpTime.ToLongDateString()}");
+            Console.WriteLine($"- {ntpTime}");
+            Console.WriteLine($"- {ntpTime.ToShortDateString()}");
+
+            // 2
+            Console.WriteLine($"- {ntpTime.ToString("yyyy-mm-ddThh:mm:ssZ")}");
 
             client.Close();
         }
