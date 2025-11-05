@@ -25,12 +25,24 @@ namespace ntp1
             DateTime ntpTime = NtpPacket.ToDateTime(timeMessage);
 
             // 1
-            Console.WriteLine($"- {ntpTime.ToLongDateString()}");
-            Console.WriteLine($"- {ntpTime}");
-            Console.WriteLine($"- {ntpTime.ToShortDateString()}");
+            DateTime ntpTimeUtc = ntpTime;
+            DateTime systemTimeUtc = DateTime.UtcNow;
+            TimeSpan timeDiff = systemTimeUtc - ntpTimeUtc;
+            Console.WriteLine($"Différence de temps : {timeDiff.TotalSeconds:F2} secondes");
 
             // 2
-            Console.WriteLine($"- {ntpTime.ToString("yyyy-mm-ddThh:mm:ssZ")}");
+            DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(ntpTimeUtc, TimeZoneInfo.Local);
+            Console.WriteLine($"Heure locale : {localTime}");
+
+            // 3
+            TimeZoneInfo swissTimeZone = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
+            DateTime swissTime = TimeZoneInfo.ConvertTimeToUtc(ntpTimeUtc, swissTimeZone);
+            Console.WriteLine($"Heure suisse : {swissTime}");
+
+            // 4
+            TimeZoneInfo utcTimeZone = TimeZoneInfo.Utc;
+            DateTime backToUtc = TimeZoneInfo.ConvertTime(localTime, TimeZoneInfo.Local, utcTimeZone);
+            Console.WriteLine($"Retour vers UTC : {backToUtc}");
 
             client.Close();
         }
