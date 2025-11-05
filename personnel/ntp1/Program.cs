@@ -8,43 +8,28 @@ namespace ntp1
     {
         static void Main(string[] args)
         {
-            string ntpServer = "0.ch.pool.ntp.org";
+            string[] ntpServers = {
+                "0.pool.ntp.org",
+                "1.pool.ntp.org",
+                "time.google.com",
+                "time.cloudflare.com"
+            };
 
             byte[] timeMessage = new byte[48];
             timeMessage[0] = 0x1B; //LI = 0 (no warning), VN = 3 (IPv4 only), Mode = 3 (Client Mode)
 
-            IPEndPoint ntpReference = new IPEndPoint(Dns.GetHostAddresses(ntpServer)[0], 123);
-
-            UdpClient client = new UdpClient();
-            client.Connect(ntpReference);
-
-            client.Send(timeMessage, timeMessage.Length);
-
-            timeMessage = client.Receive(ref ntpReference);
+            IPEndPoint ntpReference = new IPEndPoint(Dns.GetHostAddresses(ntpServers)[0], 123);
 
             DateTime ntpTime = NtpPacket.ToDateTime(timeMessage);
 
-            // 1
-            DateTime ntpTimeUtc = ntpTime;
-            DateTime systemTimeUtc = DateTime.UtcNow;
-            TimeSpan timeDiff = systemTimeUtc - ntpTimeUtc;
-            Console.WriteLine($"Différence de temps : {timeDiff.TotalSeconds:F2} secondes");
+            using (UdpClient client = new UdpClient())
+            {
+                client.Connect(ntpReference);
 
-            // 2
-            DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(ntpTimeUtc, TimeZoneInfo.Local);
-            Console.WriteLine($"Heure locale : {localTime}");
-
-            // 3
-            TimeZoneInfo swissTimeZone = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
-            DateTime swissTime = TimeZoneInfo.ConvertTimeToUtc(ntpTimeUtc, swissTimeZone);
-            Console.WriteLine($"Heure suisse : {swissTime}");
-
-            // 4
-            TimeZoneInfo utcTimeZone = TimeZoneInfo.Utc;
-            DateTime backToUtc = TimeZoneInfo.ConvertTime(localTime, TimeZoneInfo.Local, utcTimeZone);
-            Console.WriteLine($"Retour vers UTC : {backToUtc}");
-
-            client.Close();
+                client.Send(timeMessage, timeMessage.Length);
+                timeMessage = client.Receive(ref ntpReference);
+                client.Close();
+            }
         }
 
         class NtpPacket()
